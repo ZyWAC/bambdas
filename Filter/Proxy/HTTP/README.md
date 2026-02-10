@@ -125,6 +125,75 @@ if (foundServerName && enableManualAnnotations) {
 return foundServerName;
 
 ```
+## [DetectStackTraces.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/DetectStackTraces.bambda)
+### Detects stack traces and exception messages in error responses for Java, Python, PHP, .NET, Node.js, Ruby, and Go.
+#### Author: whoamins
+```java
+if (!requestResponse.hasResponse()) {
+    return false;
+}
+
+var response = requestResponse.response();
+
+if (response.statusCode() < 400) {
+    return false;
+}
+
+String body = response.bodyToString();
+
+// Java stack traces
+if (body.matches("(?s).*\\bat [a-zA-Z][a-zA-Z0-9_.]*\\.[a-zA-Z][a-zA-Z0-9_]*\\([^)]*\\.java:\\d+\\).*") ||
+    body.contains("Exception in thread") ||
+    body.matches("(?s).*(Exception|Error):\\s+.*\\n.*at .*")) {
+    return true;
+}
+
+// Python tracebacks
+if (body.contains("Traceback (most recent call last)") ||
+    body.matches("(?s).*File \"[^\"]+\\.py\", line \\d+.*")) {
+    return true;
+}
+
+// PHP errors
+if (body.matches("(?s).*Fatal error:.*in /.*\\.php.*line \\d+.*") ||
+    body.matches("(?s).*Warning:.*in /.*\\.php.*line \\d+.*") ||
+    body.matches("(?s).*Parse error:.*in /.*\\.php.*line \\d+.*") ||
+    body.matches("(?s).*in /[^ ]+\\.php on line \\d+.*")) {
+    return true;
+}
+
+// .NET stack traces
+if (body.contains("System.") && 
+    body.matches("(?s).*Exception:.*") &&
+    (body.matches("(?s).*at [a-zA-Z][a-zA-Z0-9_.]*\\.[a-zA-Z][a-zA-Z0-9_]*\\(.*\\) in .*:\\d+.*") ||
+     body.matches("(?s).*at [a-zA-Z][a-zA-Z0-9_.]*\\.[a-zA-Z][a-zA-Z0-9_]*\\(.*\\).*"))) {
+    return true;
+}
+
+// Node.js/JavaScript stack traces
+if (body.matches("(?s).*Error:.*\\n.*at .* \\([^)]*:\\d+:\\d+\\).*") ||
+    body.matches("(?s).*at .* \\(/[^)]+:\\d+:\\d+\\).*") ||
+    (body.contains("Error:") && body.matches("(?s).*at .*\\.js:\\d+:\\d+.*"))) {
+    return true;
+}
+
+// Ruby stack traces
+if (body.matches("(?s).*from /[^ ]+\\.rb:\\d+:in `.*'.*") ||
+    body.matches("(?s).*Error.*:.*\\n.*\\.rb:\\d+.*") ||
+    body.contains("(backtrace)")) {
+    return true;
+}
+
+// Go panic stack traces
+if (body.matches("(?s).*panic:.*\\n.*goroutine \\d+.*") ||
+    body.matches("(?s).*goroutine \\d+ \\[.*\\]:.*") ||
+    (body.contains("panic:") && body.matches("(?s).*/.*\\.go:\\d+.*"))) {
+    return true;
+}
+
+return false;
+
+```
 ## [DetectSuspiciousJSFunctions.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/DetectSuspiciousJSFunctions.bambda)
 ### Bambda Script to Detect and Highlight Suspicious JavaScript Functions
 #### Author: Tur24Tur / BugBountyzip (https://github.com/BugBountyzip)
