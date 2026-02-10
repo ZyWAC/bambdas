@@ -413,6 +413,14 @@ if (isExcluded) {
 return true;
 
 ```
+## [FilterAndRemoveUrlsContainingSpecificPath.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/FilterAndRemoveUrlsContainingSpecificPath.bambda)
+### Filters and removes URLs that contain specific paths or directories.
+#### Author: rahisec (https://www.linkedin.com/in/rahisec)
+```java
+
+return !requestResponse.request().url().toString().matches(".*(_next|_rsc=|static|webpack|webmanifest).*");
+
+```
 ## [FilterAuthenticated.bambda](https://github.com/PortSwigger/bambdas/blob/main/Filter/Proxy/HTTP/FilterAuthenticated.bambda)
 ### Filters authenticated 200 OK requests in Proxy HTTP history. See four config values below.
 #### Author: joe-ds (https://github.com/joe-ds)
