@@ -1,0 +1,26 @@
+id: 3bf8f408-0829-44fc-b3f4-4277a4d82ae6
+name: CSDVectorDetector
+function: CUSTOM_ACTION
+location: REPEATER
+source: "/**\r\n   * Detects potential client-side desync (CSD) vectors by sending\
+  \ an HTTP/1.1 POST probe\r\n   * with a Content-Length inflated by 1 byte beyond\
+  \ the actual body. An immediate response\r\n   * before the phantom byte is read\
+  \ may indicate a CSD vector.\r\n   *\r\n   * @author ZyWAC (https://github.com/ZyWAC)\r\
+  \n   *\r\n   * Reference: https://portswigger.net/research/client-side-desync\r\n\
+  \   **/\r\n\r\n  var req = requestResponse.request();\r\n\r\n  if (req.httpVersion().equals(\"\
+  HTTP/2\")) {\r\n      logging().logToOutput(\"[CSD Detector] HTTP/2 detected — only\
+  \ HTTP/1.1 is supported. Aborting.\");\r\n      return;\r\n  }\r\n\r\n  var body\
+  \ = req.body();\r\n  int realBodyLen = (body != null) ? body.length() : 0;\r\n \
+  \ int inflatedLen = realBodyLen + 1;\r\n\r\n  logging().logToOutput(\"[CSD Detector]\
+  \ Target: \" + req.httpService());\r\n  logging().logToOutput(\"[CSD Detector] Real\
+  \ body length: \" + realBodyLen + \" bytes | Probing with Content-Length: \" + inflatedLen);\r\
+  \n\r\n  HttpRequest probe = req\r\n      .withMethod(\"POST\")\r\n      .withHeader(\"\
+  Connection\", \"keep-alive\")\r\n      .withHeader(\"Content-Type\", \"application/x-www-form-urlencoded\"\
+  )\r\n      .withHeader(\"Content-Length\", String.valueOf(inflatedLen));\r\n\r\n\
+  \  RequestOptions options = RequestOptions.requestOptions()\r\n      .withHttpMode(HttpMode.HTTP_1)\r\
+  \n      .withResponseTimeout(5000);\r\n\r\n  HttpRequestResponse result = api().http().sendRequest(probe,\
+  \ options);\r\n\r\n  var response = result.response();\r\n  boolean timedOut = (response\
+  \ == null) || (response.statusCode() == 0);\r\n\r\n  if (!timedOut) {\r\n      logging().logToOutput(\"\
+  [+] Potential CSD vector detected — HTTP \" + response.statusCode() + \" received\
+  \ before body was fully read.\");\r\n  } else {\r\n      logging().logToOutput(\"\
+  [-] No early-response vector detected.\");\r\n  }"
